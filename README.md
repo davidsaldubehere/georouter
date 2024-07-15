@@ -8,7 +8,7 @@ GeoRouter currently supports two routing algorithms: A\* and a custom Bellman-Fo
 
 ## Installation
 
-    ```bash
+    ```
     pip install georouter
     ```
 
@@ -29,3 +29,5 @@ from georouter import GeoRouter
 - [ ] Increase speed of Bellman-Ford algorithm via caching previous paths for negative cycle detection
 - [ ] Add more routing preferences
 - [ ] Remove utility roads from routing graph
+- [ ] Improve edge preprocessing via parallelization
+- [ ] Add a save and load function for graphs and preprocessed edges
