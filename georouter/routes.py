@@ -73,8 +73,6 @@ def process_edges(osm_file_name, preference_dict, buffer=.0003, tall_threshold=1
     """
     osm = OSM(osm_file_name)
     nodes, edges = osm.get_network(nodes=True, network_type="driving")
-    plot_surface = edges.plot(figsize=(6,6), color="gray")
-
     assert preference_dict.keys() == {'sharp_elevation_change', 'tall_buildings', 'wooded_areas', 'water', 'high_speed', 'low_speed', 'building_density'}, "preference_dict must have the keys 'sharp_elevation_change', 'tall_buildings', 'wooded_areas', 'water', 'high_speed', 'low_speed'"
 
     if use_negative_weights:
@@ -97,26 +95,6 @@ def process_edges(osm_file_name, preference_dict, buffer=.0003, tall_threshold=1
     building_area, tall_building_area = create_building_boundary(osm, buffer=buffer, tall_threshold=tall_threshold)
     sharp_elevation_area = create_sharp_elevation_areas(osm._nodes, buffer=buffer, download_missing_elevation_files=download_missing_elevation_files, nasa_token=nasa_token)
     edges = classify_edge_speed(edges)
-    for polygon in wooded_area:
-        x,y = polygon.exterior.xy
-        plot_surface.plot(x, y, color='green')
-    for polygon in tall_building_area:
-        x,y = polygon.exterior.xy
-        plot_surface.plot(x, y, color='red')
-    for polygon in building_area:
-        x,y = polygon.exterior.xy
-        plot_surface.plot(x, y, color='blue')
-    for polygon in water_area:
-        x,y = polygon.exterior.xy
-        plot_surface.plot(x, y, color='orange')
-    for polygon in sharp_elevation_area:
-        x,y = polygon.exterior.xy
-        plot_surface.plot(x, y, color='black')
-    for i, edge in edges.iterrows():
-        if edge['speed_classification'] == 'high':
-            plot_surface.plot(edge['geometry'].xy[0], edge['geometry'].xy[1], color='red')
-        elif edge['speed_classification'] == 'low':
-            plot_surface.plot(edge['geometry'].xy[0], edge['geometry'].xy[1], color='blue')
 
 
     edges['user_weight'] = edges['length'].copy() * .1 if use_negative_weights else edges['length'].copy()
