@@ -8,9 +8,7 @@ GeoRouter currently supports two routing algorithms: A\* and a custom Bellman-Fo
 
 ## Installation
 
-    ```
     pip install georouter
-    ```
 
 You will also need OSM datasets from either [BBBike](https://extract.bbbike.org/) or [Geofabrik](https://download.geofabrik.de/). The datasets should be in the form of .osm.pbf files.
 
