@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# hgt files
+*.hgt
+
 # C extensions
 *.so
 

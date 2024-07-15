@@ -1,10 +1,6 @@
 import os
 import numpy as np
 from .data_loader import download_elevation_data
-from scipy.ndimage import gaussian_gradient_magnitude
-from skimage.measure import find_contours
-from shapely.geometry import Polygon
-import matplotlib.pyplot as plt
 
 SRTM_SAMPLE_DENSITY = 3601 # 3601 x 3601 samples per file for 30m resolution SRMT data
 HGTDIR = os.getenv('HGT_DIR', 'hgt')

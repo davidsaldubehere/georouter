@@ -17,7 +17,7 @@ def test_area_creation():
     water = area_creator.create_water_area(osm)
     wooded = area_creator.create_wooded_area(osm)
     building, tall_building = area_creator.create_building_boundary(osm)
-    cliffs = area_creator.create_sharp_elevation_areas(osm._nodes, nasa_token=os.environ['NASA_TOKEN'])
+    cliffs = area_creator.create_sharp_elevation_areas(osm._nodes, nasa_token=os.environ['NASA_TOKEN'], download_missing_elevation_files=True)
     assert len(water) > 0
     assert len(wooded) > 0
     assert len(building) > 0
