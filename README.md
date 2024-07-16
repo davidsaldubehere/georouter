@@ -14,7 +14,28 @@ You will also need OSM datasets from either [BBBike](https://extract.bbbike.org/
 
 SRTM datasets are automatically downloaded by GeoRouter, but a NASA Earthdata account is required as well as an account token.
 
+## Examples
+
+Easily get SRTM elevation data for bounding boxes
+```python
+from georouter import elevation
+import matplotlib.pyplot as plt
+import os
+# Terrain map of Pennsylvania
+data, lon_vals, lat_vals = elevation.get_elevation_data(min_lat = 39.7, max_lat = 42.3, min_lon = -80.5, max_lon = -74.7, download=True, nasa_token=os.getenv("NASA_TOKEN"))
+
+#plot the terrain map
+plt.imshow(data, cmap='terrain', extent=(-80.5, -74.7, 39.7, 42.3))
+plt.colorbar(label='Elevation [m]')
+plt.title('Elevation data')
+plt.show()
+```
+<img width="627" alt="Screenshot 2024-07-15 at 11 04 46 PM" src="https://github.com/user-attachments/assets/d77880c1-e032-41c6-b26a-76ffedd4f8ad">
+
+
+
 ## Usage
+
 
 ```python
 from georouter import area_creator, elevation, routes
