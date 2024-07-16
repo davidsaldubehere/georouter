@@ -5,6 +5,7 @@ from scipy.ndimage import gaussian_gradient_magnitude
 from skimage.measure import find_contours
 from .elevation import get_elevation_data
 from pyrosm import OSM
+import re
 
 def create_water_area(osm, buffer=.0003):
     """
@@ -51,6 +52,8 @@ def create_building_boundary(osm, buffer=.0003, tall_threshold=10):
     assert 'height' in buildings.columns, "No height data available for the selected OSM file"
     buildings_polygon_check = buildings[buildings['geometry'].apply(lambda x: x.geom_type) == 'Polygon']# Only consider Polygon types
     building_points = [polygon.exterior.xy for polygon in buildings_polygon_check['geometry']]
+    #Make sure that all non numeric values are removed from the entries in the height column (Some entires are like 6m or 6.0m)
+    buildings_polygon_check['height'] = buildings_polygon_check['height'].apply(lambda x: x if x == None or x.isnumeric() else re.sub(r'\D', '', x))
     tall_building_points = [polygon.exterior.xy for polygon in buildings_polygon_check[buildings_polygon_check['height'].astype(float) > tall_threshold]['geometry']]
     #It has a really weird format with a list of tuples of two arrays that represent the x and y coordinates
     x_points, y_points = [], []
