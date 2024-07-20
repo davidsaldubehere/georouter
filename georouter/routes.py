@@ -5,6 +5,7 @@ from .edge_classifier import classify_edge_speed
 from shapely import LineString
 from .core import haversine
 import georouter.path_finding as path_finding # type: ignore
+
 def get_closest_node(graph, latitude, longitude):
     """Returns the index of the graph node that is closest to the given latitude and longitude"""
     min_distance = float('inf')
@@ -45,7 +46,7 @@ def create_route_from_graph(graph, start_location, end_location, negative_edges 
         return path
 
     
-def process_edges(osm_file_name, preference_dict, buffer=.0003, tall_threshold=10, use_negative_weights = True, download_missing_elevation_files=False, nasa_token=None):
+def process_edges(osm_file_name, preference_dict, buffer=.0003, tall_threshold=10, use_negative_weights = True, download_missing_elevation_files=False, nasa_token=None, high_speed_threshold=50, low_speed_threshold=20):
     """
     Returns an iGraph instance of the osm data with edges weighted according to the preferences.
 
@@ -90,35 +91,40 @@ def process_edges(osm_file_name, preference_dict, buffer=.0003, tall_threshold=1
             assert -1 <= value <= 1, f"{key} should be between -1 and 1"
             preference_dict[key] = np.exp(-3*value)
 
-    wooded_area = create_wooded_area(osm, buffer=buffer)
-    water_area = create_water_area(osm, buffer=buffer)
-    building_area, tall_building_area = create_building_boundary(osm, buffer=buffer, tall_threshold=tall_threshold)
-    sharp_elevation_area = create_sharp_elevation_areas(osm._nodes, buffer=buffer, download_missing_elevation_files=download_missing_elevation_files, nasa_token=nasa_token)
-    edges = classify_edge_speed(edges)
-
+    wooded_area = create_wooded_area(osm, buffer=buffer) if preference_dict['wooded_areas'] != 1 else []
+    water_area = create_water_area(osm, buffer=buffer) if preference_dict['water'] != 1 else []
+    building_area, tall_building_area = create_building_boundary(osm, buffer=buffer, tall_threshold=tall_threshold) if preference_dict['building_density'] != 1 and preference_dict['tall_buildings'] != 1 else ([], [])
+    sharp_elevation_area = create_sharp_elevation_areas(osm._nodes, buffer=buffer, download_missing_elevation_files=download_missing_elevation_files, nasa_token=nasa_token) if preference_dict['sharp_elevation_change'] != 1 else []
+    edges = classify_edge_speed(edges, high_speed_threshold=high_speed_threshold, low_speed_threshold=low_speed_threshold) if preference_dict['high_speed'] != 1 or preference_dict['low_speed'] != 1 else edges
 
     edges['user_weight'] = edges['length'].copy() * .1 if use_negative_weights else edges['length'].copy()
     for i, edge in edges.iterrows():
         edge_coords = LineString(edge['geometry'])
         edge_weight = edge['user_weight']
         edge_length = edge['length']
-        for polygon in building_area:
-            if edge_coords.intersects(polygon):
-                edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['building_density'] if use_negative_weights else edge_length * preference_dict['building_density']
-        for polygon in tall_building_area:
-            if edge_coords.intersects(polygon):
-                edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['tall_buildings'] if use_negative_weights else edge_length * preference_dict['tall_buildings']
-        for polygon in wooded_area:
-            if edge_coords.intersects(polygon):
-                edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['wooded_areas'] if use_negative_weights else edge_length * preference_dict['wooded_areas']
-        for polygon in water_area:
-            if edge_coords.intersects(polygon):
-                edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['water'] if use_negative_weights else edge_length * preference_dict['water']
-        for polygon in sharp_elevation_area:
-            if edge_coords.intersects(polygon):
-                edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['sharp_elevation_change'] if use_negative_weights else edge_length * preference_dict['sharp_elevation_change']
-        if edges.at[i, 'speed_classification'] == 'high':
+        if preference_dict['building_density'] != 1:
+            for polygon in building_area:
+                if edge_coords.intersects(polygon):
+                    edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['building_density'] if use_negative_weights else edge_length * preference_dict['building_density']
+        if preference_dict['tall_buildings'] != 1:
+            for polygon in tall_building_area:
+                if edge_coords.intersects(polygon):
+                    edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['tall_buildings'] if use_negative_weights else edge_length * preference_dict['tall_buildings']
+        if preference_dict['wooded_areas'] != 1:
+            for polygon in wooded_area:
+                if edge_coords.intersects(polygon):
+                    edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['wooded_areas'] if use_negative_weights else edge_length * preference_dict['wooded_areas']
+        if preference_dict['water'] != 1:
+            for polygon in water_area:
+                if edge_coords.intersects(polygon):
+                    edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['water'] if use_negative_weights else edge_length * preference_dict['water']
+        if preference_dict['sharp_elevation_change'] != 1:
+            for polygon in sharp_elevation_area:
+                if edge_coords.intersects(polygon):
+                    edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['sharp_elevation_change'] if use_negative_weights else edge_length * preference_dict['sharp_elevation_change']
+        
+        if preference_dict['high_speed'] != 1 and edges.at[i, 'speed_classification'] == 'high':
             edges.at[i, 'user_weight'] = edge_weight + edge_length / preference_dict['high_speed'] if use_negative_weights else edge_length * preference_dict['high_speed']
-        elif edges.at[i, 'speed_classification'] == 'low':
+        elif preference_dict['low_speed'] != 1 and edges.at[i, 'speed_classification'] == 'low':
             edges.at[i, 'user_weight'] = edge_weight +edge_length / preference_dict['low_speed'] if use_negative_weights else edge_length * preference_dict['low_speed']
     return osm.to_graph(nodes, edges)

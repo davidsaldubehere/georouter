@@ -21,7 +21,10 @@ def cluster_geospatial_points(points, eps=.1, min_samples=5):
 
     polygons = []
     for cluster in clusters:
-        hull = ConvexHull(cluster)
-        polygons.append(Polygon(hull.points[hull.vertices]))
+        try:
+            hull = ConvexHull(cluster)
+            polygons.append(Polygon(hull.points[hull.vertices]))
+        except:
+            print("Encountered an error while computing point clusters. If this is a complex dataset, this is expected. If this error occurs more than once, this may indicate an issue. We are working on a permanent fix.")
 
     return list(polygons)

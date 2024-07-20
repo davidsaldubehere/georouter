@@ -9,7 +9,7 @@ c_modules = Extension(
 setup(
     name='georouter',
     packages=find_packages(include=['georouter']),
-    version='0.1.6',
+    version='0.1.7',
     description='Library for generating routes through different preferred environment attributes',
     author='David Saldubehere',
     install_requires=['requests','numpy', 'pandas', 'scipy', 'scikit-learn', 'scikit-image', 'pyrosm', 'python-igraph'],

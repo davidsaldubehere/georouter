@@ -4,8 +4,17 @@ from .clustering import cluster_geospatial_points
 from scipy.ndimage import gaussian_gradient_magnitude
 from skimage.measure import find_contours
 from .elevation import get_elevation_data
-from pyrosm import OSM
 import re
+
+def parse_polygon_type(polygon, buffer):
+    try:
+
+        if polygon.geom_type == 'Polygon':
+            return [polygon.buffer(buffer)]
+        elif polygon.geom_type == 'MultiPolygon':
+            return [poly.buffer(buffer) for poly in polygon.geoms]
+    except Exception:
+        raise ValueError("Polygon type not recognized")
 
 def create_water_area(osm, buffer=.0003):
     """
@@ -16,8 +25,13 @@ def create_water_area(osm, buffer=.0003):
     water = water[water['natural'] == 'water']
 
     #Ensures that only Polygon types are considered since there are some bugs with the shapely library
-    water_polys = water[water['geometry'].apply(lambda x: x.geom_type) == 'Polygon']['geometry']
-    return sorted(water_polys, key=lambda poly: poly.area)
+    polygons = []
+
+    for poly in water['geometry']:
+        parsed = parse_polygon_type(poly, buffer)
+        if parsed:
+            polygons.extend(parsed)
+    return sorted(polygons, key=lambda poly: poly.area)
 
 def create_wooded_area(osm, buffer=.0003):
     """
@@ -53,7 +67,8 @@ def create_building_boundary(osm, buffer=.0003, tall_threshold=10):
     buildings_polygon_check = buildings[buildings['geometry'].apply(lambda x: x.geom_type) == 'Polygon']# Only consider Polygon types
     building_points = [polygon.exterior.xy for polygon in buildings_polygon_check['geometry']]
     #Make sure that all non numeric values are removed from the entries in the height column (Some entires are like 6m or 6.0m)
-    buildings_polygon_check['height'] = buildings_polygon_check['height'].apply(lambda x: x if x == None or x.isnumeric() else re.sub(r'\D', '', x))
+
+    buildings_polygon_check['height'] = buildings_polygon_check['height'].apply(lambda x: x if x == None or x.isnumeric() else (re.sub(r'\D', '', x) or '0'))
     tall_building_points = [polygon.exterior.xy for polygon in buildings_polygon_check[buildings_polygon_check['height'].astype(float) > tall_threshold]['geometry']]
     #It has a really weird format with a list of tuples of two arrays that represent the x and y coordinates
     x_points, y_points = [], []
