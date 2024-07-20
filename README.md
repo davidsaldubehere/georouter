@@ -73,7 +73,7 @@ plt.show()
 <img width="987" alt="Screenshot 2024-07-20 at 6 18 21 PM" src="https://github.com/user-attachments/assets/2632dcfe-f66c-449e-9d72-6a1d1d14feb1">
 <img width="991" alt="Screenshot 2024-07-20 at 6 17 37 PM" src="https://github.com/user-attachments/assets/79c17cb1-f318-448f-a770-d93768a3662e">
 
-As you can see, the value -1 may be a bit too strong which causes the route the jump across the river and then back again
+As you can see, the value 1 may be a bit too strong which causes the route the jump across the river and then back again
 
 ## Usage
 
