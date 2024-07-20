@@ -34,6 +34,47 @@ plt.show()
 
 
 
+---
+Plot a nice drive through Paris that sticks to the Marne river as much as possible
+
+```python
+from georouter import routes
+from pyrosm import OSM
+import matplotlib.pyplot as plt
+import os
+import numpy as np
+
+#We want to incentivize a route that goes near water
+preference_dict = {
+    'sharp_elevation_change': 0,
+    'building_density': 0,
+    'tall_buildings': 0,
+    'wooded_areas': 0,
+    'water': 1,
+    'high_speed': 0,
+    'low_speed': 0
+}
+#for large datasets you'll want to process the edges separately (time consuming)
+#I am using https://extract.bbbike.org/?sw_lng=2.496&sw_lat=48.833&ne_lng=2.581&ne_lat=48.874&format=osm.pbf&city=asdfasdf&lang=en
+graph = routes.process_edges(osm_file_name="paris_small.osm.pbf", preference_dict=preference_dict, download_missing_elevation_files=True, nasa_token=os.environ['NASA_TOKEN'], use_negative_weights=True, buffer=.0008)
+start_location = (48.83715, 2.5)
+end_location = (48.85879, 2.57970)
+route = routes.create_route_from_graph(graph, start_location, end_location, negative_edges=True)
+
+#Lets plot the route
+nodes, edges = OSM("paris_small.osm.pbf").get_network(nodes=True, network_type="driving")
+ax = edges.plot()
+vseq = graph.vs
+path_coords_lat = np.array([vseq[i].attributes()['lat'] for i in route])
+path_coords_lon = np.array([vseq[i].attributes()['lon'] for i in route])
+ax.scatter(path_coords_lon, path_coords_lat, color='red', s=15)
+plt.show()
+```
+<img width="987" alt="Screenshot 2024-07-20 at 6 18 21 PM" src="https://github.com/user-attachments/assets/2632dcfe-f66c-449e-9d72-6a1d1d14feb1">
+<img width="991" alt="Screenshot 2024-07-20 at 6 17 37 PM" src="https://github.com/user-attachments/assets/79c17cb1-f318-448f-a770-d93768a3662e">
+
+As you can see, the value -1 may be a bit too strong which causes the route the jump across the river and then back again
+
 ## Usage
 
 
@@ -233,3 +274,6 @@ Returns an iGraph instance of the OSM data with edges weighted according to the 
 - [ ] Remove utility roads from routing graph
 - [ ] Improve edge preprocessing via parallelization
 - [ ] Add a save and load function for graphs and preprocessed edges
+- [ ] Add coastline as a water body since no ocean polygons are saved in OSM
+- [ ] Expand support for multipolygons in area creation
+- [ ] Add intermediate plotting for each step
