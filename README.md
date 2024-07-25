@@ -17,6 +17,7 @@ SRTM datasets are automatically downloaded by GeoRouter, but a NASA Earthdata ac
 ## Examples
 
 ---
+
 Plot a nice drive through Paris that sticks to the Marne river as much as possible
 
 ```python
@@ -52,11 +53,13 @@ path_coords_lon = np.array([vseq[i].attributes()['lon'] for i in route])
 ax.scatter(path_coords_lon, path_coords_lat, color='red', s=15)
 plt.show()
 ```
+
 <img width="987" alt="Screenshot 2024-07-20 at 6 18 21 PM" src="https://github.com/user-attachments/assets/2632dcfe-f66c-449e-9d72-6a1d1d14feb1">
 <img width="991" alt="Screenshot 2024-07-20 at 6 17 37 PM" src="https://github.com/user-attachments/assets/79c17cb1-f318-448f-a770-d93768a3662e">
 As you can see, the value 1 may be a bit too strong which causes the route the jump across the river and then back again
 
 ---
+
 Utility example - Find driveable places with no nearby buildings
 
 ```python
@@ -85,19 +88,19 @@ x, y = nodes['geometry'].x, nodes['geometry'].y
 ax.scatter(x, y, c='red')
 plt.show()
 ```
+
 <img width="1336" alt="Screenshot 2024-07-25 at 4 58 24 PM" src="https://github.com/user-attachments/assets/e3bd9d81-07f2-4611-bc3d-031bdf896539">
 
 ---
 
-
-Most of the points are part of highways, but you can see that it did pick up on an isolated area that appears to be a  quarry 
-
+Most of the points are part of highways, but you can see that it did pick up on an isolated area that appears to be a quarry
 
 <img width="389" alt="Screenshot 2024-07-25 at 5 08 56 PM" src="https://github.com/user-attachments/assets/84edeb76-00b2-40bb-9c7c-8f80d3bc6e3c"> ![Screenshot 2024-07-25 at 5 07 55 PM](https://github.com/user-attachments/assets/374329d1-9fdc-42a5-b2cb-160849d8e652)
 
 ---
 
 Utility example - Easily get SRTM elevation data for bounding boxes
+
 ```python
 from georouter import elevation
 import matplotlib.pyplot as plt
@@ -111,10 +114,10 @@ plt.colorbar(label='Elevation [m]')
 plt.title('Elevation data')
 plt.show()
 ```
+
 <img width="627" alt="Screenshot 2024-07-15 at 11 04 46 PM" src="https://github.com/user-attachments/assets/d77880c1-e032-41c6-b26a-76ffedd4f8ad">
 
 ## Usage
-
 
 ```python
 from georouter import area_creator, elevation, routes
@@ -148,7 +151,7 @@ Returns a list of shapely `Polygon` objects that represent wooded areas. Include
 - **Returns:**
   - `List[Polygon]`: A list of shapely `Polygon` objects representing wooded areas.
 
-#### `create_building_boundary(osm, buffer=0.0003, tall_threshold=10)`
+#### `create_building_boundary(osm, buffer=0.0003, tall_threshold=10, eps=0.1, min_samples=5)`
 
 Returns a list of shapely `Polygon` objects that represent boundaries of areas with buildings, and a list of shapely `Polygon` objects that represent tall buildings.
 
@@ -157,6 +160,8 @@ Returns a list of shapely `Polygon` objects that represent boundaries of areas w
   - `osm` (OSM): The OSM object containing OpenStreetMap data.
   - `buffer` (float, optional): The buffer distance to apply to each polygon. Default is 0.0003.
   - `tall_threshold` (int, optional): The height threshold to classify tall buildings. Default is 10.
+  - `eps` (float, optional): The maximum distance between two samples for one to be considered as in the neighborhood of the other (in km). Default is 0.1.
+  - `min_samples` (int, optional): The miniumum number of samples in the neighborhood required to form a cluster. Default is 5.
 
 - **Returns:**
   - `Tuple[List[Polygon], List[Polygon]]`: A tuple containing two lists of shapely `Polygon` objects representing building boundaries and tall buildings, respectively.
