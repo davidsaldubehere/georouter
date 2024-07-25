@@ -58,7 +58,7 @@ def create_wooded_area(osm, buffer=.0003):
             buffered_polygons.extend([poly in buffer_result.geoms]) #Weird bug where buffer returns a MultiPolygon https://github.com/shapely/shapely/issues/1044
     return buffered_polygons
 
-def create_building_boundary(osm, buffer=.0003, tall_threshold=10):
+def create_building_boundary(osm, buffer=.0003, tall_threshold=10, eps=.1, min_samples=5):
     """
     Returns a list of shapely Polygon objects that represent boundaries of areas with buildings. Also returns a listt of shapely Polygon objects that represent tall buildings (list, list)
     """
@@ -85,7 +85,7 @@ def create_building_boundary(osm, buffer=.0003, tall_threshold=10):
     tall_points = np.vstack(list(zip(x_points, y_points)))
     buffered_polygons = []
 
-    for poly in cluster_geospatial_points(points):
+    for poly in cluster_geospatial_points(points, eps=eps, min_samples=min_samples):
         buffer_result = poly.buffer(buffer)
         if buffer_result.geom_type == 'Polygon':
             buffered_polygons.append(buffer_result)
@@ -93,7 +93,7 @@ def create_building_boundary(osm, buffer=.0003, tall_threshold=10):
             buffered_polygons.extend([poly in buffer_result.geoms])
 
     tall_buffered_polygons = []
-    for poly in cluster_geospatial_points(tall_points):
+    for poly in cluster_geospatial_points(tall_points, eps=eps, min_samples=min_samples):
         buffer_result = poly.buffer(buffer)
         if buffer_result.geom_type == 'Polygon':
             tall_buffered_polygons.append(buffer_result)
