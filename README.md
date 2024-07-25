@@ -57,6 +57,46 @@ plt.show()
 As you can see, the value 1 may be a bit too strong which causes the route the jump across the river and then back again
 
 ---
+Utility example - Find driveable places with no nearby buildings
+
+```python
+from georouter import area_creator
+import matplotlib.pyplot as plt
+from pyrosm import OSM
+
+# Find locations with no buildings
+osm = OSM("state_college_large.osm.pbf")
+# eps is the maximum distance between two samples for one to be considered as in the neighborhood of the other (in km)
+# default is .1, you can and probably should change it depending on how urban the area is
+# We will also increase the buffer added to the polygons so that we don't classifiy nodes as isolate when they are not
+building_areas = area_creator.create_building_boundary(osm = osm, eps=.03, buffer=.001)[0] #returns only the buildings not the tall buildings
+
+# Plot the areas
+fig, ax = plt.subplots()
+for area in building_areas:
+    x, y = area.exterior.xy
+    ax.plot(x, y)
+
+# Okay let's get drivable nodes that are not inside these building areas
+nodes, edges = osm.get_network(nodes=True, network_type="driving")
+nodes = nodes[~nodes['geometry'].apply(lambda x: any([area.contains(x) for area in building_areas]))]
+# Plot the nodes
+x, y = nodes['geometry'].x, nodes['geometry'].y
+ax.scatter(x, y, c='red')
+plt.show()
+```
+<img width="1336" alt="Screenshot 2024-07-25 at 4 58 24 PM" src="https://github.com/user-attachments/assets/e3bd9d81-07f2-4611-bc3d-031bdf896539">
+
+---
+
+
+Most of the points are part of highways, but you can see that it did pick up on an isolated area that appears to be a  quarry 
+
+
+<img width="389" alt="Screenshot 2024-07-25 at 5 08 56 PM" src="https://github.com/user-attachments/assets/84edeb76-00b2-40bb-9c7c-8f80d3bc6e3c"> ![Screenshot 2024-07-25 at 5 07 55 PM](https://github.com/user-attachments/assets/374329d1-9fdc-42a5-b2cb-160849d8e652)
+
+---
+
 Utility example - Easily get SRTM elevation data for bounding boxes
 ```python
 from georouter import elevation
