@@ -51,8 +51,7 @@ path_coords_lon = np.array([vseq[i].attributes()['lon'] for i in route])
 ax.scatter(path_coords_lon, path_coords_lat, color='red', s=15)
 plt.show()
 ```
-
-<img width="987" alt="Screenshot 2024-07-20 at 6 18 21 PM" src="https://github.com/user-attachments/assets/2632dcfe-f66c-449e-9d72-6a1d1d14feb1">
+<img width="994" alt="Screenshot 2024-07-28 at 2 56 35 PM" src="https://github.com/user-attachments/assets/cf92fd65-aab6-48bf-bcdf-98acffd05b90">
 <img width="991" alt="Screenshot 2024-07-20 at 6 17 37 PM" src="https://github.com/user-attachments/assets/79c17cb1-f318-448f-a770-d93768a3662e">
 As you can see, the value 1 may be a bit too strong which causes the route the jump across the river and then back again
 
