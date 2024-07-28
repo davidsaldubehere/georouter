@@ -57,6 +57,65 @@ As you can see, the value 1 may be a bit too strong which causes the route the j
 
 ---
 
+Find a non-intersecting drive through downtown Manhattan that goes by as many tall buildings as possible using custom graph
+
+```python
+from georouter import area_creator, routes
+import matplotlib.pyplot as plt
+from pyrosm import OSM
+from shapely.geometry import LineString
+import numpy as np
+
+#Using https://extract.bbbike.org/?sw_lng=-74.021&sw_lat=40.7&ne_lng=-73.978&ne_lat=40.721&format=osm.pbf&city=Manhattan&lang=en
+osm = OSM("nyc.osm.pbf")
+
+#We will consider super tall buildings ≅ 230m or greater
+building_areas = area_creator.create_building_boundary(osm = osm, eps=.01, buffer=.0005, tall_threshold=230, min_samples=1)[1] #returns only the tall buildings
+
+#Let's process the edges ourselves to demonstrate how to use routing on a custom network
+nodes, edges = osm.get_network(nodes=True, network_type="driving")
+
+#Our goal is to find a route in downtown Manhattan that hits as many tall buildings as possible
+
+#We will create a new column for the user weight with some default value
+edges['user_weight'] = edges['length'].copy() * .1
+
+#We will iterate over the edges and set -400 to the user weight if the edge intersects with a tall building area
+#Using very large negative values can result in slow compute times since negative cycle prevention becomes tougher
+#The built in edge processor uses scaled values proportional to the edge length to avoid this
+#Negative values may seem counterintuitive, but they are used to incentivize the shortest path algorithm to go to certain areas
+for i, edge in edges.iterrows():
+    edge_coords = LineString(edge['geometry'])
+    edge_weight = edge['user_weight']
+    for polygon in building_areas:
+        if edge_coords.intersects(polygon):
+            edges.at[i, 'user_weight'] = -400 #doesn't need to be this large, but we want to make sure the route goes through the tall buildings
+
+#convert the nodes and edges to an iGraph using pyrosm
+graph = osm.to_graph(nodes, edges)
+start_location = (40.70314, -74.01339)
+end_location = (40.72021, -73.99358)
+
+#Find the optimal route
+route = routes.create_route_from_graph(graph, start_location, end_location, negative_edges=True)
+
+# Plot all the information
+ax = edges.plot(color="black", linewidth=0.5)
+vseq = graph.vs
+path_coords_lat = np.array([vseq[i].attributes()['lat'] for i in route])
+path_coords_lon = np.array([vseq[i].attributes()['lon'] for i in route])
+ax.scatter(path_coords_lon, path_coords_lat, color='red', s=10)
+for area in building_areas:
+    x, y = area.exterior.xy
+    ax.plot(x, y)
+plt.show()
+```
+
+<img width="1083" alt="Screenshot 2024-07-28 at 3 28 57 PM" src="https://github.com/user-attachments/assets/4e215868-8e59-42bc-b3af-d862786aded5">
+We can see that it doesn't hit all areas with tall buildings, but this is because the shortest path algorithm doesn't allow for path intersections
+
+---
+
 Utility example - Find driveable places with no nearby buildings
 
 ```python
