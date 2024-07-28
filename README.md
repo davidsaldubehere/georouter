@@ -113,7 +113,7 @@ plt.title('Elevation data')
 plt.show()
 ```
 
-<img width="627" alt="Screenshot 2024-07-15 at 11 04 46 PM" src="https://github.com/user-attachments/assets/d77880c1-e032-41c6-b26a-76ffedd4f8ad">
+<img width="1289" alt="Screenshot 2024-07-27 at 11 14 41 PM" src="https://github.com/user-attachments/assets/87e59cb2-98c5-4d7b-8940-d30d8abd7268">
 
 ## Usage
 
