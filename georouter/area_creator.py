@@ -6,13 +6,13 @@ from skimage.measure import find_contours
 from .elevation import get_elevation_data
 import re
 
-def parse_polygon_type(polygon, buffer):
+def parse_polygon_type(polygon, buffer=None):
     try:
 
         if polygon.geom_type == 'Polygon':
-            return [polygon.buffer(buffer)]
+            return [polygon.buffer(buffer)] if buffer else [polygon]
         elif polygon.geom_type == 'MultiPolygon':
-            return [poly.buffer(buffer) for poly in polygon.geoms]
+            return [poly.buffer(buffer) for poly in polygon.geoms] if buffer else [poly for poly in polygon.geoms]
     except Exception:
         raise ValueError("Polygon type not recognized")
 
@@ -64,12 +64,25 @@ def create_building_boundary(osm, buffer=.0003, tall_threshold=10, eps=.1, min_s
     """
     buildings = osm.get_buildings()
     assert 'height' in buildings.columns, "No height data available for the selected OSM file"
-    buildings_polygon_check = buildings[buildings['geometry'].apply(lambda x: x.geom_type) == 'Polygon']# Only consider Polygon types
-    building_points = [polygon.exterior.xy for polygon in buildings_polygon_check['geometry']]
-    #Make sure that all non numeric values are removed from the entries in the height column (Some entires are like 6m or 6.0m)
 
-    buildings_polygon_check['height'] = buildings_polygon_check['height'].apply(lambda x: x if x == None or x.isnumeric() else (re.sub(r'\D', '', x) or '0'))
-    tall_building_points = [polygon.exterior.xy for polygon in buildings_polygon_check[buildings_polygon_check['height'].astype(float) > tall_threshold]['geometry']]
+    buildings_elaborated = [] #list of polygons from potential multipolygons
+    for poly in buildings['geometry']:
+        parsed = parse_polygon_type(poly)
+        if parsed:
+            buildings_elaborated.extend(parsed)
+
+    building_points = [polygon.exterior.xy for polygon in buildings_elaborated]
+    #Make sure that all non numeric values are removed from the entries in the height column (Some entires are like 6m or 6.0m)
+    buildings['height'] = buildings['height'].apply(lambda x: x if x == None or x.replace('.','',1).isdigit() else (re.sub(r'\D', '', x) or '0'))
+
+    filtered_buildings = buildings[buildings['height'].astype(float) > tall_threshold]
+    buildings_elaborated = [] #list of polygons from potential multipolygons
+    for poly in filtered_buildings['geometry']:
+        parsed = parse_polygon_type(poly)
+        if parsed:
+            buildings_elaborated.extend(parsed)
+    tall_building_points = [polygon.exterior.xy for polygon in buildings_elaborated]
+
     #It has a really weird format with a list of tuples of two arrays that represent the x and y coordinates
     x_points, y_points = [], []
     for tuple_thing in building_points:
