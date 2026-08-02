@@ -2,7 +2,7 @@
 
 GeoRouter is a python library that provides a highly customizable offline routing engine that allows users to find routes based on scenery and other typical navigation preferences. In addition, GeoRouter provides powerful tools for OSM (OpenStreetMap) and SRTM (Shuttle Radar Topography Mission) data manipulation and visualization. User's can easily get accurate elevation data by simply providing a latitude and longitude bounding box.
 
-GeoRouter currently supports two routing algorithms: A\* and a custom Bellman-Ford algorithm. The A\* algorithm shortens or lengths corresponding edges based on the user's scenery preferences while the Bellman-Ford algorithm directly incentivizes edges with negative weights which virtually guarantees routes will align with the user's scenery preferences. The Bellman-Ford algorithm is therefore more powerful, but extra compute is needed to prevent negative cycles from forming via backtracking.
+GeoRouter currently supports two routing algorithms: A\* and a custom Bellman-Ford algorithm. The A\* algorithm shortens or lengths corresponding edges based on the user's scenery preferences while the Bellman-Ford algorithm directly incentivizes edges with negative weights which virtually guarantees routes will align with the user's scenery preferences. The Bellman-Ford algorithm is therefore more powerful, but extra compute is needed to prevent negative cycles from forming via backtracking. More work needs to be done on the reward mechanisms.
 
 ## Installation
 
@@ -112,7 +112,7 @@ plt.show()
 ```
 
 <img width="1083" alt="Screenshot 2024-07-28 at 3 28 57 PM" src="https://github.com/user-attachments/assets/4e215868-8e59-42bc-b3af-d862786aded5">
-We can see that it doesn't hit all areas with tall buildings, but this is because the shortest path algorithm doesn't allow for path intersections
+We can see that it doesn't hit all areas with tall buildings, a simple shortest path solver cannot reliably solve this by only modifying edge weights. This problem is NP Hard anyways and will require a future version to implement an efficient traveling salesman problem solver for these types of problems. The current implementation works if a 'bias' is enough for a path, but fails if there are strict requirements. 
 
 ---
 
